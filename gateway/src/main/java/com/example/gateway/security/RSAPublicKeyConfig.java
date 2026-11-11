@@ -1,0 +1,29 @@
+package com.example.gateway.security;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+
+@Configuration
+public class RSAPublicKeyConfig {
+    @Value("${jwt.public-key-path}")
+    private Resource publicKeyResource;
+    @Bean
+    public PublicKey publicKey() throws Exception {
+        String key= new String(publicKeyResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        String privateKey= key.replace("-----BEGIN PUBLIC KEY-----","")
+                .replace("-----END PUBLIC KEY-----","")
+                .replaceAll("\\s+","");
+        byte [] decoded= Base64.getDecoder().decode(privateKey);
+        X509EncodedKeySpec spec= new X509EncodedKeySpec(decoded);
+        KeyFactory kf= KeyFactory.getInstance("RSA");
+        return kf.generatePublic(spec);
+    }
+}
